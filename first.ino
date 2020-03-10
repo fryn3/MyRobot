@@ -1,12 +1,14 @@
-const int PIN_SWITCH = 999;
+const int PIN_SWITCH = 12;
 const int PIN_AIN1 = 10;
 const int PIN_AIN2 = 9;
 const int PIN_PWMA = 11;
 const int PIN_HALL = 2;
+const int INTERR_HALL = 0;
 
-int stateHall;
+volatile int flHall = 0;    // Флаг прерывания датчика Холла
+int cntIntHall = 0;         // Счетчик прерываний датчика Холла
+int stateSwitch;            // Состояние ключа
 
-// the setup function runs once when you press reset or power the board
 void setup()
 {
 
@@ -14,28 +16,33 @@ void setup()
     TCCR2A = 0b00000011; // fast pwm
                          // initialize digital pin LED_BUILTIN as an output.
                          // pinMode(PIN_SWITCH, OUTPUT);
+
+    attachInterrupt(INTERR_HALL, intHall, RISING); // прерывание 0 -> 1
     pinMode(PIN_AIN1, OUTPUT);
     pinMode(PIN_AIN2, OUTPUT);
     pinMode(PIN_PWMA, OUTPUT);
+    pinMode(PIN_SWITCH, INPUT);
     pinMode(PIN_HALL, INPUT);
     Serial.begin(9600);
+    stateSwitch = digitalRead(PIN_SWITCH);
     delay(1000);                     // wait for a second
     digitalWrite(LED_BUILTIN, HIGH); // turn the LED on (HIGH is the voltage level)
-    stateHall = digitalRead(PIN_HALL);
 }
-char lastComand = '0';
-// the loop function runs over and over again forever
+
 void loop()
 {
-    if (Serial.available()) {
+    if (Serial.available())
+    {
         char inByte = Serial.read();
-        if (inByte == '\n') {
+        if (inByte == '\n')
+        {
             return;
         }
         Serial.print("I received: ");
         Serial.println(inByte);
         int pw;
-        switch (inByte) {
+        switch (inByte)
+        {
         case '0':
         case '1':
         case '2':
@@ -76,14 +83,50 @@ void loop()
             Serial.println("off PWMA");
             digitalWrite(PIN_PWMA, LOW);
             break;
+        case 'i':
+            cntIntHall = 0;
+            startMotor();
+            break;
+        case 'o':
+            stopMotor();
+            break;
         default:
             Serial.println("unknown comand");
         }
     }
-    int nowStateHall = digitalRead(PIN_HALL);
-    if (stateHall != nowStateHall) {
-        stateHall = nowStateHall;
-        Serial.print("HALL change state! state = ");
-        Serial.println(stateHall);
+    int nowStateSwitch = digitalRead(PIN_SWITCH);
+    if (stateSwitch != nowStateSwitch)
+    {
+        stateSwitch = nowStateSwitch;
+        Serial.print("Switch change state! state = ");
+        Serial.println(stateSwitch);
     }
+    if (flHall)
+    {
+        flHall = 0;
+        ++cntIntHall;
+        if (cntIntHall == 509 / 2)
+        {
+            stopMotor();
+            Serial.println("I am finish");
+        }
+    }
+}
+
+void intHall()
+{
+    flHall = 1;
+}
+
+void startMotor()
+{
+    Serial.println("Motor started!");
+    digitalWrite(PIN_AIN2, HIGH);
+    analogWrite(PIN_PWMA, 128);
+}
+
+void stopMotor()
+{
+    analogWrite(PIN_PWMA, 0);
+    Serial.println("Motor stoped");
 }
