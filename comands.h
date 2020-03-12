@@ -71,6 +71,8 @@ extern XCircle xCircle;
 
 // Начало сохранение команды.
 void startReadComand();
+// Чтение команды.
+void readComand(char inCh);
 // Конец сохранения команды.
 void stopReadComand();
 // Парсит и запускает команды.

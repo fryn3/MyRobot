@@ -27,41 +27,19 @@ void loop()
     using namespace ReadComand;
     if (Serial.available())
     {
-        char inByte = Serial.read();
-        int inNum = inByte - '0';
+        char inCh = Serial.read();
+        int inNum = inCh - '0';
         if (rdProc.flags.f.started)
         {
-            if (rdProc.flags.f.space == 0)
-            {
-                if (inByte != ' ')
-                {
-                    PRINTLN("Bad format C comand!");
-                    stopReadComand();
-                    return;
-                }
-                rdProc.flags.f.space = 1;
-            }
-            else
-            {
-                if (inByte == '\n')
-                {
-                    cParsingMsg(rdProc.msg);
-                    stopReadComand();
-                    return;
-                }
-                else
-                {
-                    rdProc.msg += inByte;
-                }
-            }
+            readComand(inCh);
         }
         else
         {
-            if (inByte == '\n')
+            if (inCh == '\n')
             {
                 return;
             }
-            switch (toLowerCase(inByte))
+            switch (toLowerCase(inCh))
             {
             case 'c':
                 startReadComand();

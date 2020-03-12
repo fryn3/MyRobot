@@ -26,6 +26,33 @@ void ReadComand::startReadComand()
     rdProc.msg = "";
 }
 
+void ReadComand::readComand(char inCh)
+{
+    if (rdProc.flags.f.space == 0)
+    {
+        if (inCh != ' ')
+        {
+            PRINTLN("Bad format C comand!");
+            stopReadComand();
+            return;
+        }
+        rdProc.flags.f.space = 1;
+    }
+    else
+    {
+        if (inCh == '\n')
+        {
+            cParsingMsg(rdProc.msg);
+            stopReadComand();
+            return;
+        }
+        else
+        {
+            rdProc.msg += inCh;
+        }
+    }
+}
+
 void ReadComand::stopReadComand()
 {
     rdProc.flags.d = 0; // обнуление всех флагов
