@@ -1,21 +1,32 @@
-#include <parameters.h>
+#include "parameters.h"
 
-byte cStatus[C_CNT_COMAND];
+byte cStatus[C_CNT_COMAND] = {};
 
 volatile int flHall = 0; // Флаг прерывания датчика Холла.
 int cntHallCircle = 0;   // Счетчик прерываний датчика Холла.
 int stateSwitch;         // Состояние ключа.
 
-// Формат для задания кода команд:
+// Формат для задания кода команд "Comand":
 // Необходимо отправить первый символ 'c' или 'C', второй символ пробел,
 // дальше командное слово.
 // Например: "c GoToLen 10", "С circle 3" -- хорошие команды
 // "cGoToLen 10", "c-GoToLen 10" -- плохие команды.
-int cStarted = 0;         // Флаг задания команды.
-int cNumChar = 0;         // Номер символа введенной команды.
-Vector<char> cComandChar; // Символ текущей команды.
+struct
+{
+    bool started : 1;      // Флаг старта чтение "Comand".
+    bool space : 1;        // Флаг присуствия пробела.
+    bool _reserve : 6;     // Резерв.
+} cFl = {};                // Флаг задания команды.
+int cNumChar = 0;          // Номер символа введенной команды.
+char cComandChar[80] = {}; // Символ текущей команды.
+// TODO: Сделать одной структурой все что касается Comand
 
-Vector<int> activeComand;
+struct
+{
+    bool flActive; // активность одной из команд ONE_CIRCLE, X_FORWARD, X_BACKWARD
+    int cntHall;   // кол-во прерываний Холла.
+    int cntCircle; // заданное кол-во кругов.
+} xCircle;
 
 void setup()
 {
@@ -46,9 +57,9 @@ void loop()
     {
         char inByte = Serial.read();
         int inNum = inByte - '0';
-        if (cStarted)
+        if (cFl.started)
         {
-            if (cNumChar == 0)
+            if (cFl.space == 0)
             {
                 if (inByte != ' ')
                 {
@@ -56,24 +67,24 @@ void loop()
                     stopReadComand();
                     return;
                 }
+                cFl.space = 1;
             }
             else
             {
                 if (inByte == '\n')
                 {
-                    char *strCommand = new char[cComandChar.size()];
-                    cComandChar.copyInfo(strCommand);
-                    parsingCComand(strCommand); // CHECKME возможно перевести
-                                                // в String
+                    cComandChar[cNumChar] = 0;
+                    String strComand = cComandChar;
+                    cParsingMsg(strComand);
                     stopReadComand();
                     return;
                 }
                 else
                 {
-                    cComandChar.addElement(inByte);
+                    cComandChar[cNumChar] = inByte;
                 }
+                ++cNumChar;
             }
-            ++cNumChar;
         }
         else
         {
@@ -144,14 +155,32 @@ void loop()
         Serial.print("Switch change state! state = ");
         Serial.println(stateSwitch);
     }
-    if (flHall)
+    if (flHall && xCircle.flActive)
     {
+        // Serial.println("if (flHall && xCircle.flActive)");
         flHall = 0;
         ++cntHallCircle;
-        if (cntHallCircle ==)
+        ++xCircle.cntHall;
+        // Serial.println(ONE_CIRCLE_RISING - xCircle.cntHall);
+        if (ONE_CIRCLE_RISING - xCircle.cntHall < 0)
         {
-            stopMotor();
-            Serial.println("I am finish");
+            xCircle.cntHall = 0;
+            --xCircle.cntCircle;
+            // Serial.println("ONE_CIRCLE_RISING - xCircle.cntHall < 0");
+            if (xCircle.cntCircle == 0)
+            {
+                // Serial.println("xCircle.cntCircle == 0");
+                stopMotor();
+                for (int i = C_ONE_CIRCLE; i <= C_X_BACKWARD; ++i)
+                {
+                    if (cStatus[i] == C_STATE_ACTIVE)
+                    {
+                        cStatus[i] = C_STATE_OFF;
+                        break;
+                    }
+                }
+                xCircle.flActive = false;
+            }
         }
     }
 }
@@ -164,23 +193,29 @@ void intHall()
 void startCircle()
 {
     cntHallCircle = 0;
-    Serial.println("Circle started!");
     digitalWrite(PIN_AIN2, HIGH);
     analogWrite(PIN_PWMA, 128);
 }
 
 void stopMotor()
 {
+    digitalWrite(PIN_AIN1, LOW);
+    digitalWrite(PIN_AIN2, LOW);
     analogWrite(PIN_PWMA, 0);
-    Serial.println("Motor stoped");
 }
 
-void parsingCComand(String inC)
+void cParsingMsg(String inC)
 {
     inC.toLowerCase();
-    if (inC.equals(C_STR_ONE_CIRCLE)) // MAYBE == true
+    if (inC.equals(C_STR_ONE_CIRCLE))
     {
-        cStatus[C_ONE_CIRCLE] = C_STATE_ON;
+        cStatus[C_ONE_CIRCLE] = C_STATE_ACTIVE;
+        xCircle.cntHall = 0;
+        xCircle.cntCircle = 1;
+        xCircle.flActive = true;
+        stopMotor();
+        digitalWrite(PIN_AIN1, HIGH);
+        analogWrite(PIN_PWMA, 64);
     }
     else if (inC.startsWith(C_STR_FORWARD) || inC.startsWith(C_STR_BACKWARD))
     {
@@ -189,33 +224,50 @@ void parsingCComand(String inC)
         if (cntCircle <= 0)
         {
             Serial.println("unknown comand:" + inC);
-            return;
+            return false;
         }
+        xCircle.cntHall = 0;
+        xCircle.cntCircle = cntCircle;
+        xCircle.flActive = true;
+        stopMotor();
+        analogWrite(PIN_PWMA, 64);
         int numComand;
         if (inC.startsWith(C_STR_FORWARD))
         {
+            digitalWrite(PIN_AIN1, HIGH);
             numComand = C_X_FORWARD;
         }
         else if (inC.startsWith(C_STR_BACKWARD))
         {
-            numComand = C_STR_BACKWARD;
+            digitalWrite(PIN_AIN2, HIGH);
+            numComand = C_X_BACKWARD;
         }
-        cStatus[numComand] = C_STATE_ON;
+        cStatus[numComand] = C_STATE_ACTIVE;
+    }
+    else if (inC.startsWith(C_STR_STOP))
+    {
+
     }
     else
     {
-        Serial.println("unknown comand:" + inC);
+        Serial.print("unknown comand ELSE(");
+        Serial.print(inC.length());
+        Serial.print("): ");
+        Serial.println(inC);
+        return false;
     }
+    return true;
 }
 
 void startReadComand()
 {
-    cStarted = 1;
+    cFl.started = 1;
+    cFl.space = 0;
     cNumChar = 0;
-    cComandChar.clear();
 }
 
 void stopReadComand()
 {
-    cStarted = 0;
+    cFl.started = cFl.space = 0;
+    cNumChar = 0;
 }
