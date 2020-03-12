@@ -1,3 +1,12 @@
+#ifndef PARAMETERS_H
+#define PARAMETERS_H
+
+#define PRINT(msg)                      Serial.print(msg)
+#define PRINTLN(msg)                    Serial.println(msg)
+#define PRINT2(msg1, msg2)              PRINT(msg1); PRINTLN(msg2)
+#define PRINT3(msg1, msg2, msg3)        PRINT(msg1); PRINT2(msg2, msg3)
+#define PRINT4(msg1, msg2, msg3, msg4)  PRINT(msg1); PRINT3(msg2, msg3, msg4)
+
 // Пины
 const int PIN_SWITCH = 12;              // Пин ключа.
 const int PIN_AIN1 = 10;                // Пин направления двигателя 1.
@@ -9,48 +18,7 @@ const int PIN_HALL = 2;                 // Пин датчика Холла.
 const int INTERR_HALL = 0;              // Номер прерывания для датчика Холла.
 // Колеса
 // Кол-во срабатываний датчика Холла для одного круга колеса.
-const double ONE_CIRCLE = 508.8;                    // CHANGE.
-const double ONE_CIRCLE_RISING = ONE_CIRCLE / 2;    // RISING.
+const double ONE_CIRCLE = 508.8;                    // Interrupt type CHANGE.
+const double ONE_CIRCLE_RISING = ONE_CIRCLE / 2;    // Interrupt type RISING.
 
-// Активные команды. Некоторые из них взаимоисключаемые.
-enum class CComand {
-    // Один круг вперед. Искл: FORWARD, BACKWARD.
-    CIRCLE,
-    // Х кругов вперед. Искл: ONE_CIRCLE, BACKWARD.
-    FORWARD,
-    // Х кругов назад. Искл: ONE_CIRCLE, FORWARD.
-    BACKWARD,
-
-    // Остановить (отключить) команду.
-    STOP,   // Пусть эта команда будет самой старшей.
-    // Кол-во команд.
-    CNT     // НЕ КОМАНДА!
-};
-
-// Ключевые слова для команд. Порядок должен соотвествовать CComand.
-const char* C_STR[] = {
-    "circle",
-    "forward",
-    "backward",
-
-    "stop"
-};
-
-// Параметр для команды C_STOP, для завершения всех команд.
-const char* C_STOP_ALL = "all";
-
-
-// Статус команд
-enum class CState : byte {
-    // Не активна.
-    OFF,
-    // Принята команда, но не обработана.
-    ON,
-    // Обработали команду. Команда активна.
-    ACTIVE,
-    // Команда завершена. Можно брать данные и переводить в режим OFF.
-    FINISHED,
-
-    // Кол-во статусов.
-    CNT  // НЕ СТАТУС!
-};
+#endif  // PARAMETERS_H

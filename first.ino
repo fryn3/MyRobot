@@ -1,52 +1,15 @@
 #include "parameters.h"
-// #include "comands2.h"
+#include "somefuncs.h"
+#include "comands.h"
 
-#define PRINT(msg)                      Serial.print(msg)
-#define PRINTLN(msg)                    Serial.println(msg)
-#define PRINT2(msg1, msg2)              PRINT(msg1); PRINTLN(msg2)
-#define PRINT3(msg1, msg2, msg3)        PRINT(msg1); PRINT2(msg2, msg3)
-#define PRINT4(msg1, msg2, msg3, msg4)  PRINT(msg1); PRINT3(msg2, msg3, msg4)
-
-
-CState cState[int(CComand::CNT)] = {};
-
-volatile int flHall = 0;        // Флаг прерывания датчика Холла.
-int stateSwitch;                // Состояние ключа.
-
-// Формат для задания кода команд "Comand":
-// Необходимо отправить первый символ 'c' или 'C', второй символ пробел,
-// дальше командное слово.
-// Например: "c GoToLen 10", "С circle 3" -- хорошие команды
-// "cGoToLen 10", "c-GoToLen 10" -- плохие команды.
-
-struct
-{
-    String msg = "";        // Символ текущей команды.
-    union
-    {
-        byte d;             // data
-        struct
-        {
-            bool started : 1;      // Флаг старта чтение "Comand".
-            bool space : 1;        // Флаг присуствия пробела.
-            bool _reserve : 6;     // Резерв.
-        } f;                // fields
-    } flags;
-} comandIn = {};            // переменная для принятия команды.
-
-struct
-{
-    bool flActive;  // активность одной из команд
-    int cntHall;    // кол-во прерываний Холла.
-    int cntCircle;  // заданное кол-во кругов.
-} xCircle;          // переменная для ONE_CIRCLE, FORWARD, BACKWARD.
+volatile int flHall = 0; // Флаг прерывания датчика Холла.
+int stateSwitch;         // Состояние ключа.
 
 void setup()
 {
-    TCCR2B = 0b00000001; // x1
-    TCCR2A = 0b00000011; // fast pwm
-                         // initialize digital pin LED_BUILTIN as an output.
-                         // pinMode(PIN_SWITCH, OUTPUT);
+    TCCR2B = 0b00000001;    // x1
+    TCCR2A = 0b00000011;    // fast pwm
+                            // initialize digital pin LED_BUILTIN as an output.
     attachInterrupt(INTERR_HALL, intHall, RISING); // прерывание 0 -> 1
     pinMode(PIN_AIN1, OUTPUT);
     pinMode(PIN_AIN2, OUTPUT);
@@ -61,13 +24,14 @@ void setup()
 
 void loop()
 {
+    using namespace ReadComand;
     if (Serial.available())
     {
         char inByte = Serial.read();
         int inNum = inByte - '0';
-        if (comandIn.flags.f.started)
+        if (rdProc.flags.f.started)
         {
-            if (comandIn.flags.f.space == 0)
+            if (rdProc.flags.f.space == 0)
             {
                 if (inByte != ' ')
                 {
@@ -75,19 +39,19 @@ void loop()
                     stopReadComand();
                     return;
                 }
-                comandIn.flags.f.space = 1;
+                rdProc.flags.f.space = 1;
             }
             else
             {
                 if (inByte == '\n')
                 {
-                    cParsingMsg(comandIn.msg);
+                    cParsingMsg(rdProc.msg);
                     stopReadComand();
                     return;
                 }
                 else
                 {
-                    comandIn.msg += inByte;
+                    rdProc.msg += inByte;
                 }
             }
         }
@@ -161,11 +125,11 @@ void loop()
             if (xCircle.cntCircle == 0)
             {
                 stopMotor();
-                for (int i = int(CComand::CIRCLE); i <= int(CComand::BACKWARD); ++i)
+                for (int i = int(Comand::CIRCLE); i <= int(Comand::BACKWARD); ++i)
                 {
-                    if (cState[i] == CState::ACTIVE)
+                    if (states[i] == State::ACTIVE)
                     {
-                        cState[i] = CState::OFF;
+                        states[i] = State::OFF;
                         break;
                     }
                 }
@@ -179,79 +143,4 @@ void loop()
 void intHall()
 {
     flHall = 1;
-}
-
-// Переводит все пини колеса в LOW.
-void stopMotor()
-{
-    digitalWrite(PIN_AIN1, LOW);
-    digitalWrite(PIN_AIN2, LOW);
-    analogWrite(PIN_PWMA, 0);
-}
-
-// Парсит и запускает команды.
-void cParsingMsg(String inC)
-{
-    inC.toLowerCase();
-    if (inC.equals(C_STR[int(CComand::CIRCLE)]))
-    {
-        cState[int(CComand::CIRCLE)] = CState::ACTIVE;
-        xCircle.cntHall = 0;
-        xCircle.cntCircle = 1;
-        xCircle.flActive = true;
-        stopMotor();
-        digitalWrite(PIN_AIN1, HIGH);
-        analogWrite(PIN_PWMA, 64);
-    }
-    else if (inC.startsWith(C_STR[int(CComand::FORWARD)])
-             || inC.startsWith(C_STR[int(CComand::BACKWARD)]))
-    {
-        int indSpace = inC.indexOf(" ");
-        int cntCircle = inC.substring(indSpace + 1).toInt();
-        if (cntCircle <= 0)
-        {
-            PRINTLN("unknown comand:" + inC);
-            return;
-        }
-        xCircle.cntHall = 0;
-        xCircle.cntCircle = cntCircle;
-        xCircle.flActive = true;
-        stopMotor();
-        analogWrite(PIN_PWMA, 64);
-        int numComand;
-        if (inC.startsWith(C_STR[int(CComand::FORWARD)]))
-        {
-            digitalWrite(PIN_AIN1, HIGH);
-            numComand = int(CComand::FORWARD);
-        }
-        else if (inC.startsWith(C_STR[int(CComand::BACKWARD)]))
-        {
-            digitalWrite(PIN_AIN2, HIGH);
-            numComand = int(CComand::BACKWARD);
-        }
-        cState[numComand] = CState::ACTIVE;
-    }
-    else if (inC.startsWith(C_STR[int(CComand::STOP)]))
-    {
-
-    }
-    else
-    {
-        PRINT4("unknown comand ELSE(", inC.length(), "): ", inC);
-        return;
-    }
-    return;
-}
-
-void startReadComand()
-{
-    comandIn.flags.f.started = 1;
-    comandIn.flags.f.space = 0;
-    comandIn.msg = "";
-}
-
-void stopReadComand()
-{
-    comandIn.flags.d = 0;   // обнуление всех флагов
-    comandIn.msg = "";
 }
