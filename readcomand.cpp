@@ -1,4 +1,4 @@
-#include "comands.h"
+#include "readcomand.h"
 
 #include "parameters.h"
 #include "somefuncs.h"

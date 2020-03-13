@@ -1,6 +1,6 @@
 #include "parameters.h"
 #include "somefuncs.h"
-#include "comands.h"
+#include "readcomand.h"
 
 volatile int flHall = 0; // Флаг прерывания датчика Холла.
 int stateSwitch;         // Состояние ключа.

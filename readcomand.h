@@ -1,12 +1,13 @@
-#ifndef COMANDS_H
-#define COMANDS_H
+#ifndef READCOMAND_H
+#define READCOMAND_H
+
+#include <Arduino.h>
 
 // Формат для задания кода команд "Comand":
 // Необходимо отправить первый символ 'c' или 'C', второй символ пробел,
 // дальше командное слово.
 // Например: "c GoToLen 10", "С circle 3" -- хорошие команды
 // "cGoToLen 10", "c-GoToLen 10" -- плохие команды.
-
 namespace ReadComand
 {
 enum class Comand
@@ -98,4 +99,4 @@ void circleHall();
 void stopComand(String com);
 } // namespace ReadComand
 
-#endif // COMANDS_H
+#endif // READCOMAND_H
