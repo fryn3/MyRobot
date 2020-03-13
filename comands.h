@@ -21,10 +21,14 @@ enum class Comand
     // Остановить (отключить) команду.
     STOP, // Пусть эта команда будет самой старшей.
     // Кол-во команд.
-    CNT // НЕ КОМАНДА!
+    CNT, // НЕ КОМАНДА!
+    // Первая команда
+    FIRST = CIRCLE
 };
 // Ключевые слова для команд. Порядок должен соотвествовать Comand.
 extern const char *STR[];
+// Массив ф-ций выключений команд.
+extern void (*funcsOff[])();
 // Параметр для команды C_STOP, для завершения всех команд.
 extern const char *STOP_ALL;
 // Статус команд
@@ -90,6 +94,8 @@ void circleOffF();
 void circleOffB();
 // Обработка по прерыванию Холла.
 void circleHall();
+// Остановить активную команду.
+void stopComand(String com);
 } // namespace ReadComand
 
 #endif // COMANDS_H

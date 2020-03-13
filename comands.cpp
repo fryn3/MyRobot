@@ -13,6 +13,11 @@ const char *ReadComand::STR[] = {
     "stop",
 };
 
+void (*ReadComand::funcsOff[])() = {
+    circleOff1,
+    circleOffF,
+    circleOffB,
+};
 
 const char *ReadComand::STOP_ALL = "all";
 
@@ -79,6 +84,9 @@ void ReadComand::cParsingMsg(String inC)
     }
     else if (inC.startsWith(STR[int(Comand::STOP)]))
     {
+        int indSpace = inC.indexOf(" ");
+        String comandStr = inC.substring(indSpace + 1);
+        stopComand(comandStr);
     }
     else
     {
@@ -144,7 +152,9 @@ void ReadComand::circleOff(Comand com)
     if (com != Comand::CIRCLE && com != Comand::CIRCLE_F && com != Comand::CIRCLE_B)
     {
         ERR("Bad parameter");
+        return;
     }
+    LOG(int(com));
     xCircle.flActive = false;
     states[int(com)] = State::OFF;
     stopMotor();
@@ -169,5 +179,39 @@ void ReadComand::circleHall() // в режиме RISING
     if ((xCircle.cntCircle * ONE_CIRCLE) / 2 - xCircle.cntHall < 0)
     {
         circleOff(xCircle.comand);
+    }
+}
+
+void ReadComand::stopComand(String com)
+{
+    if (com.equals(STOP_ALL))
+    {
+        for (int i = int(Comand::FIRST); i < int(Comand::STOP); ++i)
+        {
+            if (states[i] == State::ACTIVE)
+            {
+                (*(funcsOff[i]))();
+            }
+        }
+    }
+    else
+    {
+        for (int i = int(Comand::FIRST); i < int(Comand::STOP); ++i)
+        {
+            if (com.equals(STR[i]))
+            {
+                if (states[i] == State::ACTIVE)
+                {
+                    (*(funcsOff[i]))();
+                    LOG("off comand!");
+                }
+                else
+                {
+                    LOG("none");
+                }
+
+                break;
+            }
+        }
     }
 }
