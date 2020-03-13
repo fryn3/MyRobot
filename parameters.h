@@ -1,11 +1,14 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-#define PRINT(msg)                      Serial.print(msg)
-#define PRINTLN(msg)                    Serial.println(msg)
-#define PRINT2(msg1, msg2)              PRINT(msg1); PRINTLN(msg2)
-#define PRINT3(msg1, msg2, msg3)        PRINT(msg1); PRINT2(msg2, msg3)
-#define PRINT4(msg1, msg2, msg3, msg4)  PRINT(msg1); PRINT3(msg2, msg3, msg4)
+#define PRINT(msg)                              Serial.print(msg)
+#define PRINTLN(msg)                            Serial.println(msg)
+#define PRINT2(msg1, msg2)                      PRINT(msg1); PRINTLN(msg2)
+#define PRINT3(msg1, msg2, msg3)                PRINT(msg1); PRINT2(msg2, msg3)
+#define PRINT4(msg1, msg2, msg3, msg4)          PRINT(msg1); PRINT3(msg2, msg3, msg4)
+#define PRINT5(msg1, msg2, msg3, msg4, msg5)    PRINT(msg1); PRINT4(msg2, msg3, msg4, msg5)
+#define ERR(msg)                                PRINT4("error: ", __PRETTY_FUNCTION__, ": ", msg)
+
 
 // Пины
 const int PIN_SWITCH = 12;              // Пин ключа.
