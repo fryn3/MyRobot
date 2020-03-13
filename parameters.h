@@ -8,7 +8,7 @@
 #define PRINT4(msg1, msg2, msg3, msg4)          PRINT(msg1); PRINT3(msg2, msg3, msg4)
 #define PRINT5(msg1, msg2, msg3, msg4, msg5)    PRINT(msg1); PRINT4(msg2, msg3, msg4, msg5)
 #define ERR(msg)                                PRINT4("error: ", __PRETTY_FUNCTION__, ": ", msg)
-
+#define LOG(msg)                                PRINT4("log: ", __PRETTY_FUNCTION__, ": ", msg)
 
 // Пины
 const int PIN_SWITCH = 12;              // Пин ключа.
