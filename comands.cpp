@@ -10,7 +10,9 @@ const char *ReadComand::STR[] = {
     "forward",
     "backward",
 
-    "stop"};
+    "stop",
+};
+
 
 const char *ReadComand::STOP_ALL = "all";
 
@@ -32,7 +34,7 @@ void ReadComand::readComand(char inCh)
     {
         if (inCh != ' ')
         {
-            PRINTLN("Bad format C comand!");
+            ERR("Bad format C comand!");
             stopReadComand();
             return;
         }
@@ -64,40 +66,16 @@ void ReadComand::cParsingMsg(String inC)
     inC.toLowerCase();
     if (inC.equals(STR[int(Comand::CIRCLE)]))
     {
-        states[int(Comand::CIRCLE)] = State::ACTIVE;
-        xCircle.cntHall = 0;
-        xCircle.cntCircle = 1;
-        xCircle.flActive = true;
-        stopMotor();
-        digitalWrite(PIN_AIN1, HIGH);
-        analogWrite(PIN_PWMA, 64);
+        circleActive(Comand::CIRCLE);
     }
-    else if (inC.startsWith(STR[int(Comand::FORWARD)]) || inC.startsWith(STR[int(Comand::BACKWARD)]))
+    else if (inC.startsWith(STR[int(Comand::CIRCLE_F)]) || inC.startsWith(STR[int(Comand::CIRCLE_B)]))
     {
         int indSpace = inC.indexOf(" ");
         int cntCircle = inC.substring(indSpace + 1).toInt();
-        if (cntCircle <= 0)
-        {
-            PRINTLN("unknown comand:" + inC);
-            return;
-        }
-        xCircle.cntHall = 0;
-        xCircle.cntCircle = cntCircle;
-        xCircle.flActive = true;
-        stopMotor();
-        analogWrite(PIN_PWMA, 64);
-        int numComand;
-        if (inC.startsWith(STR[int(Comand::FORWARD)]))
-        {
-            digitalWrite(PIN_AIN1, HIGH);
-            numComand = int(Comand::FORWARD);
-        }
-        else if (inC.startsWith(STR[int(Comand::BACKWARD)]))
-        {
-            digitalWrite(PIN_AIN2, HIGH);
-            numComand = int(Comand::BACKWARD);
-        }
-        states[numComand] = State::ACTIVE;
+        indSpace = inC.indexOf(" ", indSpace + 1);
+        int speed = inC.substring(indSpace + 1).toInt();
+        circleActive(inC.startsWith(STR[int(Comand::CIRCLE_F)]) ? Comand::CIRCLE_F : Comand::CIRCLE_B,
+                     cntCircle, speed);
     }
     else if (inC.startsWith(STR[int(Comand::STOP)]))
     {
@@ -108,4 +86,88 @@ void ReadComand::cParsingMsg(String inC)
         return;
     }
     return;
+}
+
+void ReadComand::sensorHall()
+{
+    if (xCircle.flActive)
+    {
+        circleHall();
+    }
+}
+
+void ReadComand::circleActive(Comand com, int cntCircle, int speed)
+{
+    if (cntCircle <= 0 || cntCircle > 8441366) // max / 508.8
+    {
+        ERR("Bad second parameter");
+        return;
+    }
+    if (speed < 0 || speed > 255)
+    {
+        ERR("Bad third parameter");
+        return;
+    }
+    else if (speed == 0)
+    {
+        speed = 64; // default
+    }
+    if (com == Comand::CIRCLE_F || com == Comand::CIRCLE)
+    {
+        stopMotor();
+        digitalWrite(PIN_AIN1, HIGH);
+    }
+    else if (com == Comand::CIRCLE_B)
+    {
+        stopMotor();
+        digitalWrite(PIN_AIN2, HIGH);
+    }
+    else
+    {
+        ERR("Bad first parameter");
+        return;
+    }
+    for (int i = int(Comand::CIRCLE); i <= int(Comand::CIRCLE_B); ++i)
+    {
+        states[int(com)] = State::OFF;
+    }
+    states[int(com)] = State::ACTIVE;
+    xCircle.cntHall = 0;
+    xCircle.comand = com;
+    xCircle.cntCircle = cntCircle;
+    xCircle.flActive = true;
+    analogWrite(PIN_PWMA, speed);
+}
+
+void ReadComand::circleOff(Comand com)
+{
+    if (com != Comand::CIRCLE && com != Comand::CIRCLE_F && com != Comand::CIRCLE_B)
+    {
+        ERR("Bad parameter");
+    }
+    xCircle.flActive = false;
+    states[int(com)] = State::OFF;
+    stopMotor();
+}
+
+void ReadComand::circleOff1()
+{
+    circleOff(Comand::CIRCLE);
+}
+void ReadComand::circleOffF()
+{
+    circleOff(Comand::CIRCLE_F);
+}
+void ReadComand::circleOffB()
+{
+    circleOff(Comand::CIRCLE_B);
+}
+
+void ReadComand::circleHall() // в режиме RISING
+{
+    ++xCircle.cntHall;
+    if ((xCircle.cntCircle * ONE_CIRCLE) / 2 - xCircle.cntHall < 0)
+    {
+        circleOff(xCircle.comand);
+    }
 }

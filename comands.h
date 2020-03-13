@@ -11,12 +11,12 @@ namespace ReadComand
 {
 enum class Comand
 {
-    // Один круг вперед. Искл: FORWARD, BACKWARD.
+    // Один круг вперед. Искл: CIRCLE_F, CIRCLE_B.
     CIRCLE,
-    // Х кругов вперед. Искл: ONE_CIRCLE, BACKWARD.
-    FORWARD,
-    // Х кругов назад. Искл: ONE_CIRCLE, FORWARD.
-    BACKWARD,
+    // Х кругов вперед. Искл: CIRCLE, CIRCLE_B.
+    CIRCLE_F,
+    // Х кругов назад. Искл: CIRCLE, CIRCLE_F.
+    CIRCLE_B,
 
     // Остановить (отключить) команду.
     STOP, // Пусть эта команда будет самой старшей.
@@ -28,7 +28,7 @@ extern const char *STR[];
 // Параметр для команды C_STOP, для завершения всех команд.
 extern const char *STOP_ALL;
 // Статус команд
-enum class State : byte
+enum class State
 {
     // Не активна.
     OFF,
@@ -42,8 +42,9 @@ enum class State : byte
     // Кол-во статусов.
     CNT // НЕ СТАТУС!
 };
-
+// Массив состояний, соотвествует кол-вам команд.
 extern State states[int(Comand::CNT)];
+// Структура для принятия команды.
 struct ReadProcess
 {
     String msg = ""; // Символ текущей команды.
@@ -55,18 +56,19 @@ struct ReadProcess
             bool space : 1;    // Флаг присуствия пробела.
             bool _reserve : 6; // Резерв.
         } f;                   // fields
-    } flags;
+    } flags {};
 };
 // Переменная для принятия команды.
 extern ReadProcess rdProc;
-
+// Структура для работы с CIRCLE, CIRCLE_F, CIRCLE_B.
 struct XCircle
 {
-    bool flActive; // активность одной из команд
-    int cntHall;   // кол-во прерываний Холла.
-    int cntCircle; // заданное кол-во кругов.
+    bool flActive;      // активность одной из команд.
+    Comand comand;      // один из трех команд.
+    uint32_t cntHall;   // кол-во прерываний Холла.
+    int32_t cntCircle;  // заданное кол-во кругов.
 };
-// Переменная для ONE_CIRCLE, FORWARD, BACKWARD.
+// Переменная для CIRCLE, CIRCLE_F, CIRCLE_B.
 extern XCircle xCircle;
 
 // Начало сохранение команды.
@@ -77,6 +79,17 @@ void readComand(char inCh);
 void stopReadComand();
 // Парсит и запускает команды.
 void cParsingMsg(String inC);
+// Обработка датчика Холла.
+void sensorHall();
+// Запускает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
+void circleActive(Comand com, int cntCircle = 1, int speed = 64);
+// Останавливает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
+void circleOff(Comand com);
+void circleOff1();
+void circleOffF();
+void circleOffB();
+// Обработка по прерыванию Холла.
+void circleHall();
 } // namespace ReadComand
 
 #endif // COMANDS_H
