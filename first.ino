@@ -92,28 +92,10 @@ void loop()
         stateSwitch = nowStateSwitch;
         PRINT2("Switch change state! state = ", stateSwitch);
     }
-    if (flHall && xCircle.flActive)
+    if (flHall)
     {
         flHall = 0;
-        ++xCircle.cntHall;
-        if (ONE_CIRCLE_RISING - xCircle.cntHall < 0)
-        {
-            xCircle.cntHall = 0;
-            --xCircle.cntCircle;
-            if (xCircle.cntCircle == 0)
-            {
-                stopMotor();
-                for (int i = int(Comand::CIRCLE); i <= int(Comand::BACKWARD); ++i)
-                {
-                    if (states[i] == State::ACTIVE)
-                    {
-                        states[i] = State::OFF;
-                        break;
-                    }
-                }
-                xCircle.flActive = false;
-            }
-        }
+        sensorHall();
     }
 }
 
