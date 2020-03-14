@@ -85,39 +85,9 @@ void sensorHall();
  * - CIRCLE_F делает cntCircle кругов вперед.
  * - CIRCLE_B делает cntCircle кругов назад.
  * @param cntCircle количество кругов в диапазоне 1..8441366.
- * @param speed скорость вращения в частоте ШИМ сигнала в диапазоне 1..255.
+ * @param speedPWM скорость вращения в частоте ШИМ сигнала в диапазоне 1..255.
  */
-void circleActive(Comand com, int cntCircle = 1, int speed = 64);
-
-/**
- * Останавливает выполнение CIRCLE/CIRCLE_F/CIRCLE_B.
- * 
- * @param com останавливает выполнение команды. Допустимые значения:
- * CIRCLE, CIRCLE_F, CIRCLE_B.
- */
-void circleOff(Comand com);
-
-/**
- * Останавливает выполнение CIRCLE
- */
-void circleOff1();
-
-/**
- * Останавливает выполнение CIRCLE_F
- */
-void circleOffF();
-
-/**
- * Останавливает выполнение CIRCLE_B
- */
-void circleOffB();
-
-/**
- * Обработка команд CIRCLE/CIRCLE_F/CIRCLE_B по прерыванию Холла.
- * 
- * @note прерывание должно быть настроено в режине RISING.
- */
-void circleHall();
+void circleActive(Comand com, int cntCircle = 1, int speedPWM = 64);
 
 /**
  * Останавливает активную команду.
