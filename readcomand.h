@@ -83,10 +83,12 @@ extern XCircle xCircle;
  * @example "forward 3 64"
  */
 void cParsingMsg(String inC);
+
 /**
  * Обработка датчика Холла.
  */
 void sensorHall();
+
 /**
  * Запускает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
  * 
@@ -98,6 +100,7 @@ void sensorHall();
  * @param speed скорость вращения в частоте ШИМ сигнала в диапазоне 1..255.
  */
 void circleActive(Comand com, int cntCircle = 1, int speed = 64);
+
 /**
  * Останавливает выполнение CIRCLE/CIRCLE_F/CIRCLE_B.
  * 
@@ -105,30 +108,36 @@ void circleActive(Comand com, int cntCircle = 1, int speed = 64);
  * CIRCLE, CIRCLE_F, CIRCLE_B.
  */
 void circleOff(Comand com);
+
 /**
  * Останавливает выполнение CIRCLE
  */
 void circleOff1();
+
 /**
  * Останавливает выполнение CIRCLE_F
  */
 void circleOffF();
+
 /**
  * Останавливает выполнение CIRCLE_B
  */
 void circleOffB();
+
 /**
  * Обработка команд CIRCLE/CIRCLE_F/CIRCLE_B по прерыванию Холла.
  * 
  * @note прерывание должно быть настроено в режине RISING.
  */
 void circleHall();
+
 /**
  * Останавливает активную команду.
  * 
  * @param com останавливает выполнение любой команды.
  */
 void stopComand(String com);
+
 } // namespace ReadComand
 
 #endif // READCOMAND_H
