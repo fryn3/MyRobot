@@ -38,12 +38,13 @@ enum class Comand
     // Первая команда
     FIRST = CIRCLE
 };
+
 // Ключевые слова для команд. Порядок должен соотвествовать Comand.
 extern const char *STR[];
-// Массив ф-ций выключений команд.
-extern void (*funcsOff[])();
+
 // Параметр для команды C_STOP, для завершения всех команд.
 extern const char *STOP_ALL;
+
 // Статус команд
 enum class State
 {

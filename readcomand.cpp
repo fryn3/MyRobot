@@ -17,18 +17,18 @@ static struct
 // Массив состояний, соотвествует кол-вам команд.
 static State states[int(Comand::CNT)] = {};
 
+// Массив ф-ций выключений команд.
+static void (*funcsOff[])() = { // TODO: подумать как сделать константным
+    circleOff1,
+    circleOffF,
+    circleOffB,
+};
 const char *ReadComand::STR[] = {
     "circle",
     "forward",
     "backward",
 
     "stop",
-};
-
-void (*ReadComand::funcsOff[])() = {
-    circleOff1,
-    circleOffF,
-    circleOffB,
 };
 
 const char *ReadComand::STOP_ALL = "all";
