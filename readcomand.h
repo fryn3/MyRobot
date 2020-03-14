@@ -72,20 +72,62 @@ struct XCircle
 };
 // Переменная для CIRCLE, CIRCLE_F, CIRCLE_B.
 extern XCircle xCircle;
-// Парсит и запускает команды.
+
+/**
+ * Парсит и запускает команды.
+ * 
+ * @param inC строка команды
+ * 
+ * @note первое слодо до пробела должно быть ключевое слово.
+ * 
+ * @example "forward 3 64"
+ */
 void cParsingMsg(String inC);
-// Обработка датчика Холла.
+/**
+ * Обработка датчика Холла.
+ */
 void sensorHall();
-// Запускает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
+/**
+ * Запускает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
+ * 
+ * @param com команда, для запуска вращение колеса. Допустимые значения:
+ * - CIRCLE делает один круг вперед.
+ * - CIRCLE_F делает cntCircle кругов вперед.
+ * - CIRCLE_B делает cntCircle кругов назад.
+ * @param cntCircle количество кругов в диапазоне 1..8441366.
+ * @param speed скорость вращения в частоте ШИМ сигнала в диапазоне 1..255.
+ */
 void circleActive(Comand com, int cntCircle = 1, int speed = 64);
-// Останавливает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
+/**
+ * Останавливает выполнение CIRCLE/CIRCLE_F/CIRCLE_B.
+ * 
+ * @param com останавливает выполнение команды. Допустимые значения:
+ * CIRCLE, CIRCLE_F, CIRCLE_B.
+ */
 void circleOff(Comand com);
+/**
+ * Останавливает выполнение CIRCLE
+ */
 void circleOff1();
+/**
+ * Останавливает выполнение CIRCLE_F
+ */
 void circleOffF();
+/**
+ * Останавливает выполнение CIRCLE_B
+ */
 void circleOffB();
-// Обработка по прерыванию Холла.
+/**
+ * Обработка команд CIRCLE/CIRCLE_F/CIRCLE_B по прерыванию Холла.
+ * 
+ * @note прерывание должно быть настроено в режине RISING.
+ */
 void circleHall();
-// Остановить активную команду.
+/**
+ * Останавливает активную команду.
+ * 
+ * @param com останавливает выполнение любой команды.
+ */
 void stopComand(String com);
 } // namespace ReadComand
 
