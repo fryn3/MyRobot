@@ -3,6 +3,15 @@
 #include "parameters.h"
 #include "somefuncs.h"
 
+// Переменная для CIRCLE, CIRCLE_F, CIRCLE_B.
+static struct
+{
+    bool flActive;      // активность одной из команд.
+    Comand comand;      // один из трех команд.
+    uint32_t cntHall;   // кол-во прерываний Холла.
+    int32_t cntCircle;  // заданное кол-во кругов.
+} xCircle = {};
+
 using namespace ReadComand;
 
 const char *ReadComand::STR[] = {
@@ -22,8 +31,6 @@ void (*ReadComand::funcsOff[])() = {
 const char *ReadComand::STOP_ALL = "all";
 
 State ReadComand::states[int(Comand::CNT)] = {};
-
-XCircle ReadComand::xCircle = {};
 
 void ReadComand::cParsingMsg(String inC)
 {

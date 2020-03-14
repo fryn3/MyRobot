@@ -62,17 +62,6 @@ enum class State
 // Массив состояний, соотвествует кол-вам команд.
 extern State states[int(Comand::CNT)];
 
-// Структура для работы с CIRCLE, CIRCLE_F, CIRCLE_B.
-struct XCircle
-{
-    bool flActive;      // активность одной из команд.
-    Comand comand;      // один из трех команд.
-    uint32_t cntHall;   // кол-во прерываний Холла.
-    int32_t cntCircle;  // заданное кол-во кругов.
-};
-// Переменная для CIRCLE, CIRCLE_F, CIRCLE_B.
-extern XCircle xCircle;
-
 /**
  * Парсит и запускает команды.
  * 
