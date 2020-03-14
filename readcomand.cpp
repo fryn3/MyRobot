@@ -23,48 +23,7 @@ const char *ReadComand::STOP_ALL = "all";
 
 State ReadComand::states[int(Comand::CNT)] = {};
 
-ReadProcess ReadComand::rdProc = {};
 XCircle ReadComand::xCircle = {};
-
-void ReadComand::startReadComand()
-{
-    rdProc.flags.f.started = 1;
-    rdProc.flags.f.space = 0;
-    rdProc.msg = "";
-}
-
-void ReadComand::readComand(char inCh)
-{
-    if (rdProc.flags.f.space == 0)
-    {
-        if (inCh != ' ')
-        {
-            ERR("Bad format C comand!");
-            stopReadComand();
-            return;
-        }
-        rdProc.flags.f.space = 1;
-    }
-    else
-    {
-        if (inCh == '\n')
-        {
-            cParsingMsg(rdProc.msg);
-            stopReadComand();
-            return;
-        }
-        else
-        {
-            rdProc.msg += inCh;
-        }
-    }
-}
-
-void ReadComand::stopReadComand()
-{
-    rdProc.flags.d = 0; // обнуление всех флагов
-    rdProc.msg = "";
-}
 
 void ReadComand::cParsingMsg(String inC)
 {
