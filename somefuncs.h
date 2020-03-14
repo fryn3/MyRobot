@@ -1,51 +1,33 @@
 #ifndef SOMEFUNCS_H
 #define SOMEFUNCS_H
 
-#include <Arduino.h>
-
-// Переводит все пини колеса в LOW.
+/**
+ * Переводит все пини колеса в LOW.
+ */
 void stopMotor();
 
-// Структура для принятия команды.
-struct ReadProcess
-{
-    // Получаемая команда. Дополняется в readComand.
-    String msg = "";
-    // Флаги состояния получения команды.
-    union {
-        byte d; // data
-        struct
-        {
-            // Флаг старта чтение "Comand".
-            bool started : 1;
-            // Флаг присуствия пробела.
-            bool space : 1;
-            // Резерв.
-            bool _reserve : 6;
-        } f;    // fields
-    } flags {};
-};
-// Переменная для принятия команды.
-extern ReadProcess rdProc;
+/**
+ * Показывает состояние чтения команды.
+ * 
+ * @return состояние активности чтения команды.
+ */
+bool comandReadStarted();
 
 /**
  * Начало сохранение команды.
  * 
- * @note очищает входную строку.
+ * @note начинает чтение команды заново.
  */
-void startReadComand();
+void comandStartRead();
+
 /**
  * Чтение команды.
  * 
  * @param inCh входящий символ.
  * 
  * @note если inCh == '\n', то будет вызвана команда cParsingMsg() и
- * stopReadComand().
+ * состояние активности сменется на 0.
  */
-void readComand(char inCh);
-/**
- * Конец сохранения команды.
- */
-void stopReadComand();
+void comandRead(char inCh);
 
 #endif  // SOMEFUNCS_H

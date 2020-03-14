@@ -5,8 +5,38 @@
 #include "parameters.h"
 #include "readcomand.h"
 
+// Структура для принятия команды.
+static struct
+{
+    // Получаемая команда. Дополняется в ComandRead.
+    String msg = "";
+    // Флаги состояния получения команды.
+    union {
+        byte d; // data
+        struct
+        {
+            // Флаг старта чтение "Comand".
+            bool started : 1;
+            // Флаг присуствия пробела.
+            bool space : 1;
+            // Флаг ошибки.
+            bool error : 1;
+            // Резерв.
+            bool _reserve : 5;
+        } f;    // fields
+    } flags {};
+} rdProc = {};
 
-ReadProcess rdProc = {};
+/**
+ * Конец сохранения команды.
+ * 
+ * @note очищает строку и опускает флаги.
+ */
+static void comandStopRead()
+{
+    rdProc.flags.d = 0;
+    rdProc.msg = "";
+}
 
 void stopMotor()
 {
@@ -15,22 +45,25 @@ void stopMotor()
     analogWrite(PIN_PWMA, 0);
 }
 
-void startReadComand()
+bool comandReadStarted()
 {
-    rdProc.flags.f.started = 1;
-    rdProc.flags.f.space = 0;
-    rdProc.msg = "";
+    return rdProc.flags.f.started;
 }
 
-void readComand(char inCh)
+void comandStartRead()
+{
+    comandStopRead();
+    rdProc.flags.f.started = 1;
+}
+
+void comandRead(char inCh)
 {
     if (rdProc.flags.f.space == 0)
     {
         if (inCh != ' ')
         {
-            ERR("Bad format C comand!");
-            stopReadComand();
-            return;
+            ERR("Missing space");
+            rdProc.flags.f.error = 1;
         }
         rdProc.flags.f.space = 1;
     }
@@ -38,19 +71,16 @@ void readComand(char inCh)
     {
         if (inCh == '\n')
         {
-            ReadComand::cParsingMsg(rdProc.msg);
-            stopReadComand();
+            if (!rdProc.flags.f.error)
+            {
+                ReadComand::cParsingMsg(rdProc.msg);
+            }
+            comandStopRead();
             return;
         }
-        else
+        else if (!rdProc.flags.f.error)
         {
             rdProc.msg += inCh;
         }
     }
-}
-
-void stopReadComand()
-{
-    rdProc.flags.d = 0;
-    rdProc.msg = "";
 }

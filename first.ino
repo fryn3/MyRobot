@@ -29,9 +29,9 @@ void loop()
     {
         char inCh = Serial.read();
         int inNum = inCh - '0';
-        if (rdProc.flags.f.started)
+        if (comandReadStarted())
         {
-            readComand(inCh);
+            comandRead(inCh);
         }
         else
         {
@@ -42,7 +42,7 @@ void loop()
             switch (toLowerCase(inCh))
             {
             case 'c':
-                startReadComand();
+                comandStartRead();
                 break;
             case '0':
             case '1':
