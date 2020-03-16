@@ -1,6 +1,5 @@
 #include "readcomand.h"
 
-#include "parameters.h"
 #include "somefuncs.h"
 
 using namespace ReadComand;
@@ -82,6 +81,37 @@ static void circleHall()
     }
 }
 
+/**
+ * Выключает конфликтующие команды.
+ * 
+ * @param com команда, по которой находятся конфликтующие команды.
+ * 
+ * @note ф-ция должна вызываться вначале включении команды.
+ * 
+ * @note ф-ция орентируется на массив COMAND_SENSOR_USE. Если команда com
+ * использует тоже устройство что и другая, и если другая команда активна,
+ * будет вызвана ф-ция отключения для другой команды.
+ * 
+ * @note эта ф-ция может вызывать ф-цию отключения и для самой команды com.
+ */
+static void offConflictComand(Comand com)
+{
+    for (int device = 0; device < int(Device::CNT); ++device)
+    {
+        if (!COMAND_SENSOR_USE[int(com)][device])
+        {
+            continue;
+        }
+        for (int comand = int(Comand::FIRST); comand < int(Comand::CNT); ++comand)
+        {
+            if (states[comand] == State::ACTIVE && COMAND_SENSOR_USE[comand][device])
+            {
+                (*(funcsOff[comand]))();
+            }
+        }
+    }
+}
+
 void ReadComand::cParsingMsg(String inC)
 {
     inC.toLowerCase();
@@ -122,6 +152,7 @@ void ReadComand::sensorHall()
 
 void ReadComand::circleActive(Comand com, int cntCircle, int speedPWM)
 {
+    offConflictComand(com);
     if (cntCircle <= 0 || cntCircle > 8441366 // max / 508.8
         || (com == Comand::CIRCLE && cntCircle != 1))
     {
@@ -139,22 +170,16 @@ void ReadComand::circleActive(Comand com, int cntCircle, int speedPWM)
     }
     if (com == Comand::CIRCLE_F || com == Comand::CIRCLE)
     {
-        stopMotor();
         digitalWrite(PIN_AIN1, HIGH);
     }
     else if (com == Comand::CIRCLE_B)
     {
-        stopMotor();
         digitalWrite(PIN_AIN2, HIGH);
     }
     else
     {
         ERR("Bad first parameter");
         return;
-    }
-    for (int i = int(Comand::CIRCLE); i <= int(Comand::CIRCLE_B); ++i)
-    {
-        states[int(com)] = State::OFF;
     }
     states[int(com)] = State::ACTIVE;
     xCircle.cntHall = 0;
