@@ -82,16 +82,6 @@ static void circleHall()
     }
 }
 
-const char *ReadComand::STR[] = {
-    "circle",
-    "forward",
-    "backward",
-
-    "stop",
-};
-
-const char *ReadComand::STOP_ALL = "all";
-
 void ReadComand::cParsingMsg(String inC)
 {
     inC.toLowerCase();

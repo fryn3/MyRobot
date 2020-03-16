@@ -40,10 +40,16 @@ enum class Comand
 };
 
 // Ключевые слова для команд. Порядок должен соотвествовать Comand.
-extern const char *STR[];
+static const char *STR[] = {
+    "circle",
+    "forward",
+    "backward",
+
+    "stop",
+};
 
 // Параметр для команды C_STOP, для завершения всех команд.
-extern const char *STOP_ALL;
+static const char *STOP_ALL = "all";
 
 // Статус команд
 enum class State
