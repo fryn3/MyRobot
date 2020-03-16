@@ -18,6 +18,7 @@
 #define READCOMAND_H
 
 #include <Arduino.h>
+#include "parameters.h"
 
 namespace ReadComand
 {
@@ -39,18 +40,6 @@ enum class Comand
     FIRST = CIRCLE
 };
 
-// Ключевые слова для команд. Порядок должен соотвествовать Comand.
-static const char *STR[] = {
-    "circle",
-    "forward",
-    "backward",
-
-    "stop",
-};
-
-// Параметр для команды C_STOP, для завершения всех команд.
-static const char *STOP_ALL = "all";
-
 // Статус команд
 enum class State
 {
@@ -65,6 +54,26 @@ enum class State
 
     // Кол-во статусов.
     CNT // НЕ СТАТУС!
+};
+
+// Ключевые слова для команд. Порядок должен соотвествовать Comand.
+static const char *STR[] = {
+    "circle",
+    "forward",
+    "backward",
+
+    "stop",
+};
+
+// Параметр для команды C_STOP, для завершения всех команд.
+static const char *STOP_ALL = "all";
+
+// Таблица использования командами устройств.
+static const bool COMAND_SENSOR_USE[int(Comand::CNT)][int(Device::CNT)] = {
+//  {SWIRCH, WHEEL, HALL}
+    { false, true, true},   // CIRCLE
+    { false, true, true},   // CIRCLE_F
+    { false, true, true},   // CIRCLE_B
 };
 
 /**
