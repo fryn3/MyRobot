@@ -24,8 +24,8 @@ const int INTERR_HALL = 0;              // Номер прерывания дл�
 const double ONE_CIRCLE = 508.8;                    // Interrupt type CHANGE.
 const double ONE_CIRCLE_RISING = ONE_CIRCLE / 2;    // Interrupt type RISING.
 
-// Устройства и датчики.
-enum class Device
+// События.
+enum class Event
 {
     // Кнопка, ключ.
     SWIRCH,
@@ -33,9 +33,13 @@ enum class Device
     WHEEL,
     // Датчик Холла.
     HALL,
+    // Прерывания таймеров.
+    eTIMER0,
+    eTIMER1,
+    eTIMER2,
 
     // Кол-во устройств.
-    CNT // yt
+    CNT // не устройство!
 };
 
 #endif  // PARAMETERS_H
