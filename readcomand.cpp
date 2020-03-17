@@ -78,11 +78,7 @@ static void (*funcsOff[])() = {
 static void circleHall()
 {
     ++xCircle.cntHall;
-    if (xCircle.comand == Comand::CIRCLE_CALIBR)
-    {
-        // TODO: разобраться с таймером!
-    }
-    else
+    if (xCircle.comand != Comand::CIRCLE_CALIBR)
     {
         if ((xCircle.funcVar.cntCircle * ONE_CIRCLE) / 2 - xCircle.cntHall < 0)
         {
@@ -98,7 +94,7 @@ static void circleHall()
  * 
  * @note ф-ция должна вызываться вначале включении команды.
  * 
- * @note ф-ция орентируется на массив COMAND_SENSOR_USE. Если команда com
+ * @note ф-ция орентируется на массив COMAND_EVENTS_TABLE. Если команда com
  * использует тоже устройство что и другая, и если другая команда активна,
  * будет вызвана ф-ция отключения для другой команды.
  * 
@@ -106,15 +102,15 @@ static void circleHall()
  */
 static void offConflictComand(Comand com)
 {
-    for (int device = 0; device < int(Device::CNT); ++device)
+    for (int device = 0; device < int(Event::CNT); ++device)
     {
-        if (!COMAND_SENSOR_USE[int(com)][device])
+        if (!COMAND_EVENTS_TABLE[int(com)][device])
         {
             continue;
         }
         for (int comand = int(Comand::FIRST); comand < int(Comand::CNT); ++comand)
         {
-            if (states[comand] == State::ACTIVE && COMAND_SENSOR_USE[comand][device])
+            if (states[comand] == State::ACTIVE && COMAND_EVENTS_TABLE[comand][device])
             {
                 (*(funcsOff[comand]))();
             }
@@ -156,11 +152,54 @@ void ReadComand::cParsingMsg(String inC)
     return;
 }
 
-void ReadComand::sensorHall()
+void ReadComand::eventSensorHall()
 {
     if (xCircle.flActive)
     {
         circleHall();
+    }
+}
+
+void ReadComand::eventTimer(int numTimer, int channel)
+{
+    switch (numTimer)
+    {
+    case 0:
+    case 1:
+        LOG("this is empty!");
+        break;
+    case 2:
+        switch (channel)
+        {
+        case CHANNEL_A:
+            if (xCircle.comand == Comand::CIRCLE_CALIBR && xCircle.flActive)
+            {
+                Timer2.stop();
+                PRINT4("CALIB: pwm = ", xCircle.funcVar.valuePwm, ", cntHall = ", xCircle.cntHall);
+                xCircle.cntHall = 0;
+                --xCircle.funcVar.valuePwm;
+                if (xCircle.funcVar.valuePwm)
+                {
+                    analogWrite(PIN_PWMA, xCircle.funcVar.valuePwm);
+                    Timer2.restart();
+                }
+                else
+                {
+                    stopMotor();
+                    PRINT("CALIB: finished!");
+                }
+            }
+            break;
+        case CHANNEL_B:
+            LOG("this is empty!");
+            break;
+        default:
+            ERR("bad second param");
+            break;
+        }
+    default:
+        ERR("bad first param");
+        break;
     }
 }
 
@@ -208,6 +247,9 @@ void ReadComand::circleActive(Comand com, int cntCircle, int speedPWM)
     {
         xCircle.funcVar.valuePwm = 255;
         analogWrite(PIN_PWMA, xCircle.funcVar.valuePwm);
+        Timer2.enableISR();              // Включает прерывания, выход А.
+        Timer2.outputDisable(CHANNEL_A); // Отключить выход таймера.
+        Timer2.setPeriod(3000000);       // TODO: 3 sec must be const
     }
     else
     {

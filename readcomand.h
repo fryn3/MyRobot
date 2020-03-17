@@ -18,6 +18,9 @@
 #define READCOMAND_H
 
 #include <Arduino.h>
+
+#include "GyverLibs/GyverTimers/GyverTimers.h"
+
 #include "parameters.h"
 
 namespace ReadComand
@@ -76,12 +79,12 @@ static const char *STOP_ALL = "all";
 static const int CALIBR_CNT = 240;
 
 // Таблица использования командами устройств.
-static const bool COMAND_SENSOR_USE[int(Comand::CNT)][int(Device::CNT)] = {
-//  {SWIRCH, WHEEL, HALL}
-    { false, true, true},   // CIRCLE
-    { false, true, true},   // CIRCLE_F
-    { false, true, true},   // CIRCLE_B
-    { false, true, true},   // CIRCLE_CALIBR
+static const bool COMAND_EVENTS_TABLE[int(Comand::CNT)][int(Event::CNT)] = {
+//  { SWITC, WHEEL, HALL , TIME0, TIME1, TIME2 }
+    { false, true , true , false, false, false },   // CIRCLE
+    { false, true , true , false, false, false },   // CIRCLE_F
+    { false, true , true , false, false, false },   // CIRCLE_B
+    { false, true , true , false, false, true  },   // CIRCLE_CALIBR
 };
 
 /**
@@ -96,9 +99,20 @@ static const bool COMAND_SENSOR_USE[int(Comand::CNT)][int(Device::CNT)] = {
 void cParsingMsg(String inC);
 
 /**
- * Обработка датчика Холла.
+ * Обработка события датчика Холла.
  */
-void sensorHall();
+void eventSensorHall();
+
+/**
+ * Обработка событий таймеров.
+ * 
+ * @param numTimer номер таймера 0..2
+ * @param channel номер канала
+ * - CHANNEL_A
+ * - CHANNEL_B
+ * - CHANNEL_C - if __AVR_ATmega2560__
+ */
+void eventTimer(int numTimer, int channel);
 
 const int SPEED_PWM_DEFAULT = 64;
 /**
