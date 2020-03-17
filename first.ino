@@ -92,6 +92,10 @@ void loop()
         stateSwitch = nowStateSwitch;
         PRINT2("Switch change state! state = ", stateSwitch);
     }
+    if (flHall > 1)
+    {
+        ERR("missing handler of interrupt");
+    }
     if (flHall)
     {
         flHall = 0;
@@ -102,5 +106,5 @@ void loop()
 // Прерывания для датчика Холла.
 void intHall()
 {
-    flHall = 1;
+    ++flHall;
 }
