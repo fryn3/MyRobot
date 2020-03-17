@@ -2,14 +2,15 @@
 #include "somefuncs.h"
 #include "readcomand.h"
 
-volatile int flHall = 0; // Флаг прерывания датчика Холла.
-int stateSwitch;         // Состояние ключа.
+volatile int flHall = 0;    // Флаг прерывания датчика Холла.
+volatile int flTimer2A = 0; // Флаг прерывания таймера 2A.
+int stateSwitch;            // Состояние ключа.
 
 void setup()
 {
-    TCCR2B = 0b00000001;    // x1
-    TCCR2A = 0b00000011;    // fast pwm
-                            // initialize digital pin LED_BUILTIN as an output.
+    TCCR2B = 0b00000001;                           // x1
+    TCCR2A = 0b00000011;                           // fast pwm
+                                                   // initialize digital pin LED_BUILTIN as an output.
     attachInterrupt(INTERR_HALL, intHall, RISING); // прерывание 0 -> 1
     pinMode(PIN_AIN1, OUTPUT);
     pinMode(PIN_AIN2, OUTPUT);
@@ -94,12 +95,21 @@ void loop()
     }
     if (flHall > 1)
     {
-        ERR("missing handler of interrupt");
+        ERR("missing handler sensor Hall of interrupt");
     }
     if (flHall)
     {
         flHall = 0;
-        sensorHall();
+        eventSensorHall();
+    }
+    if (flTimer2A > 1)
+    {
+        ERR("missing handler timer2A of interrupt");
+    }
+    if (flTimer2A)
+    {
+        flTimer2A = 0;
+        eventTimer(2, CHANNEL_A);
     }
 }
 
@@ -107,4 +117,10 @@ void loop()
 void intHall()
 {
     ++flHall;
+}
+
+// Прерывания таймера 2 выход A.
+ISR(TIMER2_A)
+{
+    ++flTimer2A;
 }
