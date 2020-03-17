@@ -25,12 +25,14 @@ namespace ReadComand
 // Коды команд.
 enum class Comand
 {
-    // Один круг вперед. Искл: CIRCLE_F, CIRCLE_B.
+    // Один круг вперед.
     CIRCLE,
-    // Х кругов вперед. Искл: CIRCLE, CIRCLE_B.
+    // Х кругов вперед.
     CIRCLE_F,
-    // Х кругов назад. Искл: CIRCLE, CIRCLE_F.
+    // Х кругов назад.
     CIRCLE_B,
+    // Калибровка скорости.
+    CIRCLE_CALIBR,
 
     // Остановить (отключить) команду.
     STOP, // Пусть эта команда будет самой старшей.
@@ -57,10 +59,12 @@ enum class State
 };
 
 // Ключевые слова для команд. Порядок должен соотвествовать Comand.
+// Символы должны быть строчными.
 static const char *STR[] = {
     "circle",
     "forward",
     "backward",
+    "calibr",
 
     "stop",
 };
@@ -68,12 +72,16 @@ static const char *STR[] = {
 // Параметр для команды C_STOP, для завершения всех команд.
 static const char *STOP_ALL = "all";
 
+// Количество сробатываний датчика Холла для калибровки.
+static const int CALIBR_CNT = 240;
+
 // Таблица использования командами устройств.
 static const bool COMAND_SENSOR_USE[int(Comand::CNT)][int(Device::CNT)] = {
 //  {SWIRCH, WHEEL, HALL}
     { false, true, true},   // CIRCLE
     { false, true, true},   // CIRCLE_F
     { false, true, true},   // CIRCLE_B
+    { false, true, true},   // CIRCLE_CALIBR
 };
 
 /**
@@ -92,6 +100,7 @@ void cParsingMsg(String inC);
  */
 void sensorHall();
 
+const int SPEED_PWM_DEFAULT = 64;
 /**
  * Запускает одну из команд CIRCLE, CIRCLE_F, CIRCLE_B.
  * 
@@ -102,7 +111,7 @@ void sensorHall();
  * @param cntCircle количество кругов в диапазоне 1..8441366.
  * @param speedPWM скорость вращения в частоте ШИМ сигнала в диапазоне 1..255.
  */
-void circleActive(Comand com, int cntCircle = 1, int speedPWM = 64);
+void circleActive(Comand com, int cntCircle = 1, int speedPWM = SPEED_PWM_DEFAULT);
 
 /**
  * Останавливает активную команду.

@@ -4,13 +4,16 @@
 
 using namespace ReadComand;
 
-// Переменная для CIRCLE, CIRCLE_F, CIRCLE_B.
+// Переменная для CIRCLE.
 static struct
 {
-    bool flActive;     // активность одной из команд.
-    Comand comand;     // один из трех команд.
-    uint32_t cntHall;  // кол-во прерываний Холла.
-    int32_t cntCircle; // заданное кол-во кругов.
+    bool flActive;    // активность одной из команд.
+    Comand comand;    // один из трех команд.
+    uint32_t cntHall; // кол-во прерываний Холла.
+    union {
+        int32_t cntCircle; // заданное кол-во кругов.
+        int32_t valuePwm;  // текущее значение ШИМ.
+    } funcVar;             // ф-циональная структура.
 } xCircle = {};
 
 // Массив состояний, соотвествует кол-вам команд.
@@ -75,9 +78,16 @@ static void (*funcsOff[])() = {
 static void circleHall()
 {
     ++xCircle.cntHall;
-    if ((xCircle.cntCircle * ONE_CIRCLE) / 2 - xCircle.cntHall < 0)
+    if (xCircle.comand == Comand::CIRCLE_CALIBR)
     {
-        circleOff(xCircle.comand);
+        // TODO: разобраться с таймером!
+    }
+    else
+    {
+        if ((xCircle.funcVar.cntCircle * ONE_CIRCLE) / 2 - xCircle.cntHall < 0)
+        {
+            circleOff(xCircle.comand);
+        }
     }
 }
 
@@ -128,6 +138,10 @@ void ReadComand::cParsingMsg(String inC)
         circleActive(inC.startsWith(STR[int(Comand::CIRCLE_F)]) ? Comand::CIRCLE_F : Comand::CIRCLE_B,
                      cntCircle, speedPWM);
     }
+    else if (inC.equals(STR[int(Comand::CIRCLE_CALIBR)]))
+    {
+        // TODO: Вызов ф-цию начала калибровки.
+    }
     else if (inC.startsWith(STR[int(Comand::STOP)]))
     {
         int indSpace = inC.indexOf(" ");
@@ -166,9 +180,14 @@ void ReadComand::circleActive(Comand com, int cntCircle, int speedPWM)
     }
     else if (speedPWM == 0)
     {
-        speedPWM = 64; // default
+        speedPWM = SPEED_PWM_DEFAULT;
     }
-    if (com == Comand::CIRCLE_F || com == Comand::CIRCLE)
+    if (com == Comand::CIRCLE_CALIBR && (cntCircle != 0 || speedPWM != SPEED_PWM_DEFAULT))
+    {
+        ERR("Bad comand && parameters");
+        return;
+    }
+    else if (com == Comand::CIRCLE_F || com == Comand::CIRCLE || com == Comand::CIRCLE_CALIBR)
     {
         digitalWrite(PIN_AIN1, HIGH);
     }
@@ -184,9 +203,17 @@ void ReadComand::circleActive(Comand com, int cntCircle, int speedPWM)
     states[int(com)] = State::ACTIVE;
     xCircle.cntHall = 0;
     xCircle.comand = com;
-    xCircle.cntCircle = cntCircle;
     xCircle.flActive = true;
-    analogWrite(PIN_PWMA, speedPWM);
+    if (com == Comand::CIRCLE_CALIBR)
+    {
+        xCircle.funcVar.valuePwm = 255;
+        analogWrite(PIN_PWMA, xCircle.funcVar.valuePwm);
+    }
+    else
+    {
+        xCircle.funcVar.cntCircle = cntCircle;
+        analogWrite(PIN_PWMA, speedPWM);
+    }
 }
 
 void ReadComand::stopComand(String com)
