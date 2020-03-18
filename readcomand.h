@@ -19,7 +19,7 @@
 
 #include <Arduino.h>
 
-#include "GyverLibs/GyverTimers/GyverTimers.h"
+#include "GyverTimers.h"
 
 #include "parameters.h"
 
