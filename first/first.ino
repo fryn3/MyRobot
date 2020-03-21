@@ -3,6 +3,7 @@
 #include "readcomand.h"
 
 volatile int flHall = 0;    // Флаг прерывания датчика Холла.
+volatile int flLine = 0;    // Флаг прерывания датчика линии.
 volatile int flTimer2A = 0; // Флаг прерывания таймера 2A.
 int stateSwitch;            // Состояние ключа.
 
@@ -12,11 +13,13 @@ void setup()
     TCCR2A = 0b00000011;                           // fast pwm
                                                    // initialize digital pin LED_BUILTIN as an output.
     attachInterrupt(INTERR_HALL, intHall, RISING); // прерывание 0 -> 1
+    attachInterrupt(INTERR_SENS_LINE, intLine, RISING); // прерывание 0 -> 1
     pinMode(PIN_AIN1, OUTPUT);
     pinMode(PIN_AIN2, OUTPUT);
     pinMode(PIN_PWMA, OUTPUT);
     pinMode(PIN_SWITCH, INPUT);
     pinMode(PIN_HALL, INPUT);
+    pinMode(PIN_SENS_LINE, INPUT);
     Serial.begin(9600);
     stateSwitch = digitalRead(PIN_SWITCH);
     delay(1000);                     // wait for a second
@@ -102,6 +105,15 @@ void loop()
         flHall = 0;
         eventSensorHall();
     }
+    if (flLine > 1)
+    {
+        ERR("flLine");
+    }
+    if (flLine)
+    {
+        flLine = 0;
+        PRINTLN("line");
+    }
     if (flTimer2A > 1)
     {
         ERR("missing handler timer2A of interrupt");
@@ -117,6 +129,12 @@ void loop()
 void intHall()
 {
     ++flHall;
+}
+
+// Прерывания для датчика линии.
+void intLine()
+{
+    ++flLine;
 }
 
 // Прерывания таймера 2 выход A.
